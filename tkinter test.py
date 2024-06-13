@@ -82,6 +82,7 @@ def handle_click(event):
     
     
 def whichbutton(widget_id):
+    print(len(specbuttonids))
     listnum = specbuttonids.index(widget_id)
     if listnum <= 13:
     #Then SPECIAL        
@@ -120,7 +121,7 @@ def updatespecial(buttonnum):
     initiative = specstats[1]+specstats[5]
     GenerateResistancesFrame()
     GenerateHPFrame()
-    SkillsFrame(skillnames, skillvalues, skilladj)
+    SkillsFrame()
     
 for i in range(len(special)):
     #Labels
@@ -238,7 +239,7 @@ def Exitlvlup(lvlentry, screen):
     levelstuff[1] = levelstuff[1]+xpgained
     while levelstuff[1]>levelstuff[2]:
         levelstuff[0]=levelstuff[0]+1
-        levelstuff[2]=levelstuff[2]*1.2
+        levelstuff[2]=ceil(levelstuff[2]*1.2)
     GenerateLevelFrame(levelstuff[0], levelstuff[1], levelstuff[2])
     screen.destroy()
     return
@@ -276,19 +277,131 @@ skillvalues = [int(i) for i in skillvalues]
 skilladj = statlist[4].strip('][').split(',')
 skilladj = [int(i) for i in skilladj]
 
-skillnames = ["Small Guns", "Big Guns", "Energy Weapons", "Explosives", "Unarmed", "Melee Weapons", "Throwing", "First aid", "Surgeon", "Sneak", "Lockpick", "Steal", "Traps", "Science", "Repair", "Speech", "Barter", "Survival"]
+AllFrame = tk.Frame(master=window,borderwidth=5, bg=brown)
+AllFrame.grid(row=1,column=1,sticky="SWE")
 
-def SkillsFrame(skillnames, skillvalues, skilladj):
+skillnames = ["Small Guns", "Big Guns", "Energy Weapons", "Explosives", "Unarmed", "Melee Weapons", "Throwing", "First aid", "Surgeon", "Sneak", "Lockpick", "Steal", "Traps", "Science", "Repair", "Speech", "Barter", "Survival"]
+AvailablePoints=int(statlist[5])
+def SkillsFrame():
+    global skillvalues
+    global AllFrame
     for widget in skillsframe.winfo_children():
         widget.destroy()
+    for widget in AllFrame.winfo_children():
+        widget.destroy()
     
-    SkillValues(skillvalues, *skilladj)
+    SkillValues(*skilladj)
     for i in range(len(skillnames)):
         label = tk.Label(master=skillsframe, text=f"{skillnames[i]}: {skillvalues[i]}", bg="black", fg="lime", font="Gothic 8")
         label.grid(row=i,column=0,sticky="W")
-        
-def SkillValues(skillvalues, SGA=0,BGA=0,EWA=0,EXA=0,UNA=0,MWA=0,THA=0,FAA=0,SRA=0,SNA=0,LPA=0,STA=0,TRA=0,SCA=0,REA=0,SPA=0,BAA=0,SUA=0):
-    global specstats
+    
+    label = tk.Label(master=AllFrame, bg="black", fg="lime", relief="sunken",text=f"Skill Points to Allocate: {AvailablePoints}")
+    label.grid(row=0,column=0)
+    button = tk.Button(master=AllFrame, bg=brown, fg="yellow", borderwidth=5, relief="raised", command=AllocatePointsScreen, text="Allocate Points")
+    button.grid(row=1, column=0, sticky="NEW")
+    
+PointsButtonLoc=[]
+    
+def AllocatePointsScreen():
+    global skilladj
+    global skillnames
+    global PointsWindow
+    global TextFrame1
+    global Textframe2
+    global ButtonFrame
+    PointsWindow=tk.Tk()
+    PointsWindow.configure(bg=brown)
+    TextFrame1 = tk.Frame(master=PointsWindow, bg="black", borderwidth=5, relief="sunken")
+    TextFrame1.grid(row=0,column=0)
+    ButtonFrame = tk.Frame(master=PointsWindow, bg=brown)
+    ButtonFrame.grid(row=0,column=1)
+    Textframe2 = tk.Frame(master=PointsWindow, bg=brown)
+    Textframe2.grid(row=1,column=0)
+    button=tk.Button(master=Textframe2, bg=brown, fg="yellow", relief="raised", text="OK", command=PointsWindow.destroy)
+    button.grid(row=0,column=2,sticky="NSEW")
+    GeneratePointsPopup()
+    
+def GeneratePointsPopup():
+    global PointsWindow
+    global TextFrame1
+    global Textframe2
+    global ButtonFrame
+    global skillnames
+    global skillvalues
+    global skilladj
+    global AvailablePoints
+    PointsButtonLoc.clear()
+    SkillValues(*skilladj)
+    for i in range(len(skillvalues)):
+        label = tk.Label(master=TextFrame1, bg="black", fg="lime", text=f"{skillnames[i]}: {skillvalues[i]}", font="Gothic 16")
+        label.grid(row=i,column=0,sticky="NSEW")
+        ButtonMiniFrame = tk.Frame(master=ButtonFrame, bg=brown)
+        ButtonMiniFrame.grid(row=i,column=0)
+        button=tk.Button(master=ButtonMiniFrame, bg=brown, fg="yellow", text="+", font="Gothic 10")
+        button.bind("<Button-1>", SkillChange)
+        button.grid(row=0,column=0)
+        PointsButtonLoc.append(button.winfo_id())
+        button=tk.Button(master=ButtonMiniFrame, bg=brown, fg="yellow", text="-", font="Gothic 10")
+        button.bind("<Button-1>", SkillChange)
+        button.grid(row=0,column=1)
+        PointsButtonLoc.append(button.winfo_id())
+    label = tk.Label(master=Textframe2, bg = "black", fg="lime", text=f"Skill Points to Allocate: {AvailablePoints}", relief="sunken")
+    label.grid(row=0,column=1, sticky="NSEW")
+   
+def SkillChange(event):
+    global PointsWindow
+    global TextFrame1
+    global ButtonFrame
+    global AvailablePoints
+    WhichButton = PointsButtonLoc.index(event.widget.winfo_id())
+    i=WhichButton//2
+    if WhichButton % 2 == 0:
+        skilladj[i]=skilladj[i]+1
+        AvailablePoints=AvailablePoints-1
+    else:
+        skilladj[i]=skilladj[i]-1
+        AvailablePoints=AvailablePoints+1
+    GeneratePointsPopup()
+    SkillsFrame()
+    
+    
+    
+
+    
+# def IncrementSkill(skillname, PointsWindow,TextFrame1,ButtonFrame):
+#     global skilladj
+#     global skillnames
+#     global AvailablePoints
+#     i = skillnames.index(skillname)
+#     skilladj[i] = skilladj[i]+1
+#     AvailablePoints = AvailablePoints-1
+#     for widget in TextFrame1.winfo_children():
+#         widget.destroy()
+#     for widget in ButtonFrame.winfo_children():
+#         widget.destroy()
+#     GeneratePointsPopup(PointsWindow, TextFrame1, ButtonFrame)
+#     return
+
+# def DecrementSkill(skillname, PointsWindow,TextFrame1,ButtonFrame):
+#     global skilladj
+#     global skillnames
+#     global AvailablePoints
+#     i = skillnames.index(skillname)
+#     skilladj[i] = skilladj[i]-1
+#     AvailablePoints = AvailablePoints+1
+#     for widget in TextFrame1.winfo_children():
+#         widget.destroy()
+#     for widget in ButtonFrame.winfo_children():
+#         widget.destroy()
+#     GeneratePointsPopup(PointsWindow, TextFrame1, ButtonFrame)
+#     return
+    
+    
+    
+    
+    
+def SkillValues(SGA=0,BGA=0,EWA=0,EXA=0,UNA=0,MWA=0,THA=0,FAA=0,SRA=0,SNA=0,LPA=0,STA=0,TRA=0,SCA=0,REA=0,SPA=0,BAA=0,SUA=0):
+    global skillvalues
     skillvalues[0]=(35+specstats[5]+SGA)
     skillvalues[1]=(10+specstats[5]+BGA)
     skillvalues[2]=(10+specstats[5]+EWA)
@@ -310,7 +423,7 @@ def SkillValues(skillvalues, SGA=0,BGA=0,EWA=0,EXA=0,UNA=0,MWA=0,THA=0,FAA=0,SRA
     return
 
 
-SkillsFrame(skillnames, skillvalues, skilladj)
+SkillsFrame()
     
 window.mainloop()
 
