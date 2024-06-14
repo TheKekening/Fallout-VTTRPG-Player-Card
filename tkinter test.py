@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from math import floor, ceil
+from PIL import ImageTk, Image
 # window = tk.Tk()
 # label = tk.Label(text="henlo tkinter", foreground="white", background="black", width=25, height=5)
 # button = tk.Button(
@@ -44,6 +45,9 @@ statuseffectsresults = statlist[1].strip('][').split(',')
 statuseffectsresults = [bool(i) for i in [int(j) for j in statuseffectsresults]]
 Resistances = ["Action Points", "Carry Weight", "Damage Res.", "Poison Res.", "Radiation Res.", "Initiative", "Critical Chance"]
 resvalues = []
+#Must add spec bonuses
+specbonus=0
+RemSpecPoints = 40-sum(specstats)+specbonus
 #Calculates resistances
 def APcalc(modifier=0):
     resvalues.append((5+floor(specstats[5])+modifier))
@@ -119,6 +123,9 @@ def updatespecial(buttonnum):
     label = tk.Label(master = numframe, text=specstats[i], foreground = "lime", background = "black", width = 2, height = 1, font="Gothic 20", relief = "sunken")
     label.pack()
     initiative = specstats[1]+specstats[5]
+    RemSpecPoints = 40-sum(specstats)+specbonus
+    label = tk.Label(master=specialframe, bg="black", fg="lime",  borderwidth=5, relief="sunken", text=RemSpecPoints, font="Gothic 10", width = 2, height = 1)
+    label.grid(row=7,column=1)
     GenerateResistancesFrame()
     GenerateHPFrame()
     SkillsFrame()
@@ -149,6 +156,11 @@ for i in range(len(special)):
     specbuttonids.append(button.winfo_id())
     button.bind("<Button-1>", handle_click)
     button.pack()
+
+label = tk.Label(master=specialframe, bg=brown, fg="yellow", relief="groove", text="Points \n Available", font="Gothic 10")
+label.grid(row=7,column=0, sticky="W")
+label = tk.Label(master=specialframe, bg="black", fg="lime",  borderwidth=5, relief="sunken", text=RemSpecPoints, font="Gothic 10", width = 2, height = 1)
+label.grid(row=7,column=1)
 
 # Implements status screen
 statusframe = tk.Frame(master = topleft, background = brown, borderwidth=5)
@@ -295,8 +307,8 @@ def SkillsFrame():
         label = tk.Label(master=skillsframe, text=f"{skillnames[i]}: {skillvalues[i]}", bg="black", fg="lime", font="Gothic 8")
         label.grid(row=i,column=0,sticky="W")
     
-    label = tk.Label(master=AllFrame, bg="black", fg="lime", relief="sunken",text=f"Skill Points to Allocate: {AvailablePoints}")
-    label.grid(row=0,column=0)
+    label = tk.Label(master=AllFrame, bg="black", fg="lime", relief="sunken",text=f"Skill Points to Allocate: {AvailablePoints}", borderwidth=5)
+    label.grid(row=0,column=0, sticky="NEW")
     button = tk.Button(master=AllFrame, bg=brown, fg="yellow", borderwidth=5, relief="raised", command=AllocatePointsScreen, text="Allocate Points")
     button.grid(row=1, column=0, sticky="NEW")
     
@@ -424,6 +436,45 @@ def SkillValues(SGA=0,BGA=0,EWA=0,EXA=0,UNA=0,MWA=0,THA=0,FAA=0,SRA=0,SNA=0,LPA=
 
 
 SkillsFrame()
+
+ArmourFrame = tk.Frame(master=window, background=brown, borderwidth=5)
+ArmourFrame.grid(row=0,column=2, sticky="n")
+ArmourImage = ImageTk.PhotoImage(Image.open("ArmourCard.png"))
+LeftArmour = tk.Frame(master=ArmourFrame, bg=brown)
+LeftArmour.grid(row=0,column=0, sticky="NS")
+label=tk.Label(master=ArmourFrame, image=ArmourImage, borderwidth=5, relief="sunken", bg="black")
+label.grid(row=0,column=1)
+RightArmour = tk.Frame(master=ArmourFrame, bg=brown)
+RightArmour.grid(row=0,column=2, sticky="NS")
+LArmFrames=[]
+LButtons=[]
+RButtons=[]
+RArmFrames=[]
+
+for i in range(4):
+    frame=(tk.Frame(master=LeftArmour, pady=19, bg=brown))
+    frame.grid(row=i, column=0,sticky="NSEW")
+    LArmFrames.append(frame)
     
+for i in range(4):
+    frame=(tk.Frame(master=RightArmour, pady=19, bg=brown))
+    frame.grid(row=i, column=0, sticky="NSEW")
+    RArmFrames.append(frame)    
+    
+
+def ArmourFrameGen():
+    LButtons.clear()
+    RButtons.clear()
+
+    for i in range(4):
+        button=tk.Button(master=LArmFrames[i], bg=brown, fg="yellow", text="L")
+        button.pack()
+        LButtons.append(button)
+        button=tk.Button(master=RArmFrames[i], bg=brown, fg="yellow", text="R")
+        button.pack()
+        RButtons.append(button)
+        
+ArmourFrameGen()
+
 window.mainloop()
 
