@@ -2,6 +2,8 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from math import floor, ceil
 from PIL import ImageTk, Image
+import os
+path = os.path.dirname(os.path.abspath(__file__))
 # window = tk.Tk()
 # label = tk.Label(text="henlo tkinter", foreground="white", background="black", width=25, height=5)
 # button = tk.Button(
@@ -437,6 +439,8 @@ def SkillValues(SGA=0,BGA=0,EWA=0,EXA=0,UNA=0,MWA=0,THA=0,FAA=0,SRA=0,SNA=0,LPA=
 
 SkillsFrame()
 
+#Armour frame stuff
+
 ArmourFrame = tk.Frame(master=window, background=brown, borderwidth=5)
 ArmourFrame.grid(row=0,column=2, sticky="n")
 ArmourImage = ImageTk.PhotoImage(Image.open("ArmourCard.png"))
@@ -450,31 +454,117 @@ LArmFrames=[]
 LButtons=[]
 RButtons=[]
 RArmFrames=[]
+ArmourWorn = statlist[6].strip('][').split(',')
+ArmourWorn = [str(i) for i in ArmourWorn]
+LArmour_stats = []
+RArmour_stats = []
+LBodyParts = ["Head", "Right Arm", "Right Leg", "Groin"]
+RBodyParts = ["Eyes", "Torso", "Left Arm", "Left Leg"]
+
+def ArmourStats():
+    LArmour_stats.clear()
+    RArmour_stats.clear()
+    for i in range(len(ArmourWorn)):
+        if ArmourWorn[i] == "None":
+            if i <=3:
+                LArmour_stats.append(("No Armour", 0, 0, "None"))     
+            else:
+                RArmour_stats.append(("No Armour", 0, 0, "None")) 
+            continue
+        print(ArmourWorn)
+        ArmType,ArmSlot = ArmourWorn[i].split("-")
+        f = open(f"Armour/{ArmType}/{ArmSlot}.txt", mode="r")
+        TheThingy = (f.read()).strip(")(")
+        name, ArmourDT, ArmourDR, spec=(TheThingy).split(",")
+        print((name, ArmourDT, ArmourDR, spec))
+        f.close()
+        if i <=3:
+            LArmour_stats.append((name,ArmourDT,ArmourDR,spec))     
+        else:
+            RArmour_stats.append((name,ArmourDT,ArmourDR,spec)) 
+
+
 
 for i in range(4):
-    frame=(tk.Frame(master=LeftArmour, pady=19, bg=brown))
+    frame=(tk.Frame(master=LeftArmour, pady=0, bg=brown))
     frame.grid(row=i, column=0,sticky="NSEW")
     LArmFrames.append(frame)
     
 for i in range(4):
-    frame=(tk.Frame(master=RightArmour, pady=19, bg=brown))
+    frame=(tk.Frame(master=RightArmour, pady=0, bg=brown))
     frame.grid(row=i, column=0, sticky="NSEW")
     RArmFrames.append(frame)    
     
+ArmourList=[]
+def ArmourChangeScreen(event):
+    global ArmourList
+    global ACS
+    global ACSframe
+    global var
+    ArmourList.clear()
+    ACS = tk.Tk()
+    ACS.configure(bg=brown)
+    Buttons = LButtons+RButtons
+    ButtonNum = Buttons.index(event.widget.winfo_id())
+    BodyParts = LBodyParts+RBodyParts
+    global SpecBodyPart
+    SpecBodyPart = BodyParts[ButtonNum]
+    label = tk.Label(text = SpecBodyPart, bg="black", fg="lime", font="Gothic 10", master=ACS, relief="sunken", borderwidth=5)
+    label.grid(row=0,column=0,sticky="N")
+    ACSframe = tk.Frame(master=ACS, bg=brown)
+    ACSframe.grid(row=2,column=0,sticky="N")
+    for i in os.scandir(f"{path}\Armour"):
+        DirTree = str(i).split("'")
+        ArmourList.append(DirTree[1])
+    var = tk.StringVar(master=ACS)
+    var.set("None")
+    var.trace("w", UpdateACS)
+    option = tk.OptionMenu(ACS, var, *ArmourList)
+    option.configure(bg="black", fg="lime", borderwidth=5, relief="sunken")
+    option.grid(row=1,column=0,sticky="N")
+    labellist=["Name:", "DT:", "DR:", "Special Effect:"]  
+    for i in labellist:
+        label = tk.Label(text=f"{i} None", bg="black", fg="lime", font="Gothic 10", relief="sunken", borderwidth=5, master=ACSframe)
+        label.grid(row=labellist.index(i), column=0, sticky="W")
+
+def UpdateACS(*stuff):
+    for widget in ACSframe.winfo_children():
+        widget.destroy()
+    labellist=["Name:", "DT:", "DR:", "Special Effect:"]  
+    with open(f"Armour\{var.get()}\{SpecBodyPart}.txt") as f:
+        ArmStatList = f.read().strip(')(').split(',')
+        ArmStatList = [str(i) for i in ArmStatList]
+    for i in range(len(labellist)):
+
+        label = tk.Label(text=f"{labellist[i]} {ArmStatList[i]}", font="Gothic 10", relief="sunken", borderwidth=2, master=ACSframe, background="black", foreground="lime")
+        label.grid(row=i, column=0, sticky="W")
+    
+    BodyParts = LBodyParts+RBodyParts
+    ArmourWorn[BodyParts.index(SpecBodyPart)] = f"{var.get()}-{SpecBodyPart}"
+    ArmourFrameGen()
 
 def ArmourFrameGen():
     LButtons.clear()
     RButtons.clear()
-
+    ArmourStats()
     for i in range(4):
-        button=tk.Button(master=LArmFrames[i], bg=brown, fg="yellow", text="L")
-        button.pack()
-        LButtons.append(button)
-        button=tk.Button(master=RArmFrames[i], bg=brown, fg="yellow", text="R")
-        button.pack()
-        RButtons.append(button)
+        for widget in LArmFrames[i].winfo_children():
+            widget.destroy()
+        for widget in RArmFrames[i].winfo_children():
+            widget.destroy()
+        button=tk.Button(master=LArmFrames[i], bg="black", fg="lime", text=f"{LBodyParts[i]} \n{LArmour_stats[i][0]} \nDT: {LArmour_stats[i][1]} \nDR: {LArmour_stats[i][2]} \nEffects: {LArmour_stats[i][3]}", relief="sunken", font="Gothic 10", justify="left", borderwidth=5)
+        button.grid(row=0,column=0)
+        LButtons.append(button.winfo_id())
+        button.bind("<Button-1>", ArmourChangeScreen)
+        button=tk.Button(master=RArmFrames[i], bg="black", fg="lime", text=f"{RBodyParts[i]} \n{RArmour_stats[i][0]} \nDT: {RArmour_stats[i][1]} \nDR: {RArmour_stats[i][2]} \nEffects: {LArmour_stats[i][3]}", relief="sunken", font="Gothic 10", justify="left", borderwidth=5)
+        button.grid(row=0,column=0)
+        RButtons.append(button.winfo_id())
+        button.bind("<Button-1>", ArmourChangeScreen)
         
+
 ArmourFrameGen()
+
+
 
 window.mainloop()
 
