@@ -473,7 +473,7 @@ def ArmourStats():
             continue
         print(ArmourWorn)
         ArmType,ArmSlot = ArmourWorn[i].split("-")
-        f = open(f"Armour/{ArmType}/{ArmSlot}.txt", mode="r")
+        f = open(f"Armour/{ArmSlot}/{ArmType}.txt", mode="r")
         TheThingy = (f.read()).strip(")(")
         name, ArmourDT, ArmourDR, spec=(TheThingy).split(",")
         print((name, ArmourDT, ArmourDR, spec))
@@ -513,9 +513,11 @@ def ArmourChangeScreen(event):
     label.grid(row=0,column=0,sticky="N")
     ACSframe = tk.Frame(master=ACS, bg=brown)
     ACSframe.grid(row=2,column=0,sticky="N")
-    for i in os.scandir(f"{path}\Armour"):
+    for i in os.scandir(f"{path}\Armour\{SpecBodyPart}"):
         DirTree = str(i).split("'")
-        ArmourList.append(DirTree[1])
+        txt=DirTree[1]
+        txt = txt[:(len(txt)-4)]
+        ArmourList.append(txt)
     var = tk.StringVar(master=ACS)
     var.set("None")
     var.trace("w", UpdateACS)
@@ -531,7 +533,7 @@ def UpdateACS(*stuff):
     for widget in ACSframe.winfo_children():
         widget.destroy()
     labellist=["Name:", "DT:", "DR:", "Special Effect:"]  
-    with open(f"Armour\{var.get()}\{SpecBodyPart}.txt") as f:
+    with open(f"Armour\{SpecBodyPart}\{var.get()}.txt") as f:
         ArmStatList = f.read().strip(')(').split(',')
         ArmStatList = [str(i) for i in ArmStatList]
     for i in range(len(labellist)):
@@ -564,7 +566,7 @@ def ArmourFrameGen():
 
 ArmourFrameGen()
 
-
+#Perks
 
 window.mainloop()
 
