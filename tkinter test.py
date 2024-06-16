@@ -659,6 +659,7 @@ def PerksFrameGen():
 # Perk Bonuses cause change in stats
 def PerkCheck():
     global specbonus
+    specbonus=0
     with open("perks.txt") as f:
         PerksList = f.read().split("\n")
     for perks in PerksList:
