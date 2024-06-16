@@ -3,6 +3,7 @@ import tkinter.ttk as ttk
 from math import floor, ceil
 from PIL import ImageTk, Image
 import os
+import re
 path = os.path.dirname(os.path.abspath(__file__))
 # window = tk.Tk()
 # label = tk.Label(text="henlo tkinter", foreground="white", background="black", width=25, height=5)
@@ -111,6 +112,7 @@ def whichbutton(widget_id):
 
 
 def updatespecial(buttonnum):
+    global specbonus
     numchange = buttonnum.split(" ")
     i = int(numchange[1])
     if numchange[0] == "pos" and int(specstats[i]) != 10:
@@ -126,8 +128,9 @@ def updatespecial(buttonnum):
     label.pack()
     initiative = specstats[1]+specstats[5]
     RemSpecPoints = 40-sum(specstats)+specbonus
-    label = tk.Label(master=specialframe, bg="black", fg="lime",  borderwidth=5, relief="sunken", text=RemSpecPoints, font="Gothic 10", width = 2, height = 1)
-    label.grid(row=7,column=1)
+    specbonus = 0
+    label = tk.Label(master=remainingframe, bg="black", fg="lime",  borderwidth=5, relief="sunken", text=RemSpecPoints, font="Gothic 10", width = 2, height = 1)
+    label.grid(row=0,column=1)
     GenerateResistancesFrame()
     GenerateHPFrame()
     SkillsFrame()
@@ -159,10 +162,12 @@ for i in range(len(special)):
     button.bind("<Button-1>", handle_click)
     button.pack()
 
-label = tk.Label(master=specialframe, bg=brown, fg="yellow", relief="groove", text="Points \n Available", font="Gothic 10")
-label.grid(row=7,column=0, sticky="W")
-label = tk.Label(master=specialframe, bg="black", fg="lime",  borderwidth=5, relief="sunken", text=RemSpecPoints, font="Gothic 10", width = 2, height = 1)
-label.grid(row=7,column=1)
+remainingframe = tk.Frame(master=topleft, bg=brown)
+remainingframe.grid(row=1,column=0)
+label = tk.Label(master=remainingframe, bg=brown, fg="yellow", relief="groove", text="Points \n Available", font="Gothic 10")
+label.grid(row=0,column=0, sticky="W")
+label = tk.Label(master=remainingframe, bg="black", fg="lime",  borderwidth=5, relief="sunken", text=RemSpecPoints, font="Gothic 10", width = 2, height = 1)
+label.grid(row=0,column=1)
 
 # Implements status screen
 statusframe = tk.Frame(master = topleft, background = brown, borderwidth=5)
@@ -182,7 +187,7 @@ def GenerateHPFrame():
     hpinput.grid(row=0, column = 1, sticky="NSEW")
     hpinput.insert(0, str(15+specstats[0]+specstats[2]*2))
 
-GenerateHPFrame()
+
 #Status screen (+Update function)
 
 for i in statuseffects:
@@ -219,13 +224,17 @@ def GenerateResistancesFrame(apmod=0,cwmod=0,drmod=0,prmod=0,rrmod=0,inimod=0,cc
     RRcalc(rrmod)
     Inicalc(inimod)
     CCcalc(ccmod)
+    for i in range(len(skilladj)):
+        skilladj[i] = 0
+    PerkCheck()
     for i in Resistances:
         label = tk.Label(master=resframe, text=i, background="black", foreground="lime", font="Gothic 8")
         label.grid(row=Resistances.index(i), column=0, sticky="W")
         label = tk.Label(master=resframe, text=resvalues[Resistances.index(i)], background="black", foreground="lime", font="Gothic 8")
         label.grid(row=Resistances.index(i), column=1, sticky="E")
+    
 
-GenerateResistancesFrame()
+
 
 # LevelUp frame
 
@@ -251,9 +260,10 @@ def Exitlvlup(lvlentry, screen):
     global levelstuff
     xpgained = int("0"+lvlentry.get())
     levelstuff[1] = levelstuff[1]+xpgained
-    while levelstuff[1]>levelstuff[2]:
+    while levelstuff[1]>=levelstuff[2]:
         levelstuff[0]=levelstuff[0]+1
-        levelstuff[2]=ceil(levelstuff[2]*1.2)
+        n = levelstuff[0] + 1
+        levelstuff[2]=ceil((n*(n-1)/2)*1000)
     GenerateLevelFrame(levelstuff[0], levelstuff[1], levelstuff[2])
     screen.destroy()
     return
@@ -437,7 +447,7 @@ def SkillValues(SGA=0,BGA=0,EWA=0,EXA=0,UNA=0,MWA=0,THA=0,FAA=0,SRA=0,SNA=0,LPA=
     return
 
 
-SkillsFrame()
+
 
 #Armour frame stuff
 
@@ -487,12 +497,12 @@ def ArmourStats():
 
 for i in range(4):
     frame=(tk.Frame(master=LeftArmour, pady=0, bg=brown))
-    frame.grid(row=i, column=0,sticky="NSEW")
+    frame.grid(row=i, column=0,sticky="E")
     LArmFrames.append(frame)
     
 for i in range(4):
     frame=(tk.Frame(master=RightArmour, pady=0, bg=brown))
-    frame.grid(row=i, column=0, sticky="NSEW")
+    frame.grid(row=i, column=0, sticky="W")
     RArmFrames.append(frame)    
     
 ArmourList=[]
@@ -567,6 +577,184 @@ def ArmourFrameGen():
 ArmourFrameGen()
 
 #Perks
+
+
+
+PerksFrame = tk.Frame(master = window, bg=brown, borderwidth=5)
+PerksFrame.grid(row=0,column=3, sticky="n")
+
+label = tk.Label(master=PerksFrame, bg = brown, fg="yellow", relief="groove", text = "Perks", font= "Gothic 20")
+label.grid(row=0, column=0,sticky="NEW")
+
+PerksStuff = tk.Frame(master=PerksFrame,bg="black", borderwidth=5, relief="groove")
+PerksStuff.grid(row=1,column=0, sticky = "NSEW")
+
+PerksNames = tk.Frame(master = PerksStuff, bg="black")
+PerksNames.grid(row=0,column=0, sticky = "w")
+
+PerksStats = tk.Frame(master = PerksStuff, bg="black")
+PerksStats.grid(row=0,column=1, sticky = "e")
+
+#Add perks button
+
+def NewPerk():
+    NewPerkWin = tk.Tk()
+    NewPerkWin.configure(bg=brown)
+    
+    def ClosePerkWin():
+        with open("perks.txt","a") as f:
+            f.write(f"\n({Name.get()},{Stat.get()})")
+        Update()
+        NewPerkWin.destroy()
+    
+    LabelPerk = tk.Label(master = NewPerkWin, bg=brown, fg="yellow", relief="groove", text = "New Perk", font= "Gothic 10")
+    LabelPerk.grid(row=0,column=0)
+    
+    Colframe = tk.Frame(master=NewPerkWin, bg=brown)
+    Colframe.grid(row=1,column=0)
+    
+    NameFrame = tk.Frame(master=Colframe, bg="black", borderwidth=5, relief="sunken")
+    NameFrame.grid(row=0,column=0)
+    
+    StatFrame = tk.Frame(master=Colframe, bg="black", borderwidth=5, relief="sunken")
+    StatFrame.grid(row=0,column=1)
+    
+    ExitButton = tk.Button(master = NewPerkWin, bg=brown, fg="yellow", relief="groove", text = "Save", font= "Gothic 10", command=ClosePerkWin)
+    ExitButton.grid(row=2,column=0)
+
+    NameLabel = tk.Label(master=NameFrame, bg="black", fg="lime", text="Name")
+    NameLabel.grid(row=0, column=0)
+    
+    StatLabel = tk.Label(master=StatFrame, bg="black", fg="lime", text="Modifier")
+    StatLabel.grid(row=0, column=0)
+    
+    Name = tk.StringVar(master=NewPerkWin)
+    Stat = tk.StringVar(master=NewPerkWin)
+    
+    NameEntry = tk.Entry(master = NameFrame, textvariable=Name)
+    NameEntry.grid(row=1,column=0)
+    
+    StatEntry = tk.Entry(master = StatFrame, textvariable=Stat)
+    StatEntry.grid(row=1,column=0)
+    
+
+AddPerkButton = tk.Button(master = PerksFrame, bg=brown, fg="yellow", relief="groove", text = "New Perk", font= "Gothic 10", command=NewPerk)
+AddPerkButton.grid(row=2,column=0)
+
+
+def PerksFrameGen():
+    with open("perks.txt") as f:
+        PerksList = f.read().split("\n")
+    for widget in PerksNames.winfo_children():
+        widget.destroy()
+    for widget in PerksStats.winfo_children():
+        widget.destroy()
+    for perks in PerksList:
+        PerkStuff = perks.strip(")(").split(",")
+        label = tk.Label(master = PerksNames, bg="black", fg="lime", font="Gothic 8", text = PerkStuff[0], anchor="w")
+        label.grid(row=PerksList.index(perks),column=0,sticky="w")
+        label = tk.Label(master = PerksStats, bg="black", fg="lime", font="Gothic 8", text = PerkStuff[1], anchor="e")
+        label.grid(row=PerksList.index(perks),column=0,sticky="e")
+
+# Perk Bonuses cause change in stats
+def PerkCheck():
+    global specbonus
+    with open("perks.txt") as f:
+        PerksList = f.read().split("\n")
+    for perks in PerksList:
+        PerkStuff = perks.strip(")(").split(",")
+        print(PerkStuff)
+        if "small" in PerkStuff[1].lower():
+            SGA = re.findall(r"\d+", PerkStuff[1])
+            skilladj[0] = skilladj[0] + int(SGA[0])
+        elif "big" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[1] = skilladj[1] + int(ADJ[0])
+        elif "energy" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[2] = skilladj[2] + int(ADJ[0])
+        elif "explosives" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[3] = skilladj[3] + int(ADJ[0])
+        elif "unarmed" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[4] = skilladj[4] + int(ADJ[0])
+        elif "melee" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[5] = skilladj[5] + int(ADJ[0])
+        elif "throwing" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[6] = skilladj[6] + int(ADJ[0])
+        elif "first" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[7] += int(ADJ[0])
+        elif "surgeon" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[8] += int(ADJ[0]) 
+        elif "sneak" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[9] += int(ADJ[0])
+        elif "lockpick" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[10] += int(ADJ[0])
+        elif "steal" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[11] += int(ADJ[0])
+        elif "traps" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[12] += int(ADJ[0])
+        elif "science" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[13] += int(ADJ[0])
+        elif "repair" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[14] += int(ADJ[0])
+        elif "speech" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[15] += int(ADJ[0])
+        elif "barter" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[16] += int(ADJ[0])
+        elif "survival" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            skilladj[17] += int(ADJ[0])
+        elif "crit" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            resvalues[6] += int(ADJ[0])/100 
+        elif "initiative" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            resvalues[5] += int(ADJ[0]) 
+        elif "radiation" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            resvalues[4] += int(ADJ[0])/100 
+        elif "poison" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            resvalues[3] += int(ADJ[0])/100 
+        elif "damage" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            resvalues[2] += int(ADJ[0])/100 
+        elif "carry" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            resvalues[1] += int(ADJ[0])
+        elif "ap" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            resvalues[0] += int(ADJ[0])
+        elif "special" in PerkStuff[1].lower():
+            ADJ = re.findall(r"\d+", PerkStuff[1])
+            specbonus += int(ADJ[0])
+
+
+def Update():
+    
+    
+    GenerateResistancesFrame()
+    updatespecial("0 0")
+    PerksFrameGen()
+    
+    SkillsFrame()
+    GenerateHPFrame()
+
+Update()
 
 window.mainloop()
 
