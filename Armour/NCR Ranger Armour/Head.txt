@@ -1,1 +1,0 @@
-(NCR Ranger Veteran Helmet, 3, 0.2, None)
