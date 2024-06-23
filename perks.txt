@@ -1,0 +1,4 @@
+(Name, Effect)
+(+1 Special,+1 Special Point)
+(wee,+1 Special Point)
+(Venutian Hokkaido,+30 Unarmed)
